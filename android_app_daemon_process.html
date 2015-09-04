@@ -39,36 +39,36 @@ Android 4.0之前在API层面就有很多方法重启你的应用进程，如自
 
 - 使用C/C++编写一个程序，并在Linux下编译成二进制文件
 
-> 使用其他语言理论上是可以的，但C/C++写的程序可以使用NDK编译
+  > 使用其他语言理论上是可以的，但C/C++写的程序可以使用NDK编译
 
 - 将该文件放在Android工程的assets目录下打包
 
 - 在Android代码中编写一个Service，并在AndroidManifest.xml中将exported属性设为true
 
-```xml
+~~~~{java}
 	<service
         android:name="com.yourApp.yourService"
         android:exported="true">
 	</service>
-```
+~~~~
 
 - 程序启动时，将该文件拷贝到data目录下的应用程序目录中，并修改权限为可执行文件
 
-```java
+~~~~{java}
 	file.setExecutable(true);
-```
+~~~~
 - 在应用程序中，使用Java API执行该文件，并将相应的参数发送到Main函数中
 
-```java
+~~~~{java}
 	Process process = new ProcessBuilder().command(arg1, arg2, ...).start();
-```
+~~~~
 在Main函数中通过argv来访问
 
-```java
+~~~~{c++}
 	int main(int argc, char** argv) {
 
 	}
-```
+~~~~
 
 ## 守护进程的编写
 
@@ -76,26 +76,26 @@ Android 4.0之前在API层面就有很多方法重启你的应用进程，如自
 
 - 首先调用fork()，启动一个子进程，并退出当前进程，调用setsid()使子进程完全独立，正式成为一个守护进程
 
-```java
+~~~~{c++}
 	if (fork() != 0) {
 		exit(0);
 	}
 	setsid();
-```
+ ~~~~
 
 - 调用flock()获取文件锁，如果文件已加锁，说明守护进程存在，则退出当前进程，防止出现多个守护进程
 
-```java
+~~~~{java}
 	int ret = 0;
     ret = flock(fileno(g_lockfile), LOCK_EX | LOCK_NB);
     if (ret != 0) {
         return -1;
     }
-```
+~~~~
 
 - 进入无限循环，判断应用程序进程是否存在，不存在则启动，然后休眠一段时间，如果程序被卸载则结束守护进程
 
-```java
+~~~~{c++}
 	while (1) {
 		if (isAppUninstalled(packagePath) == -1) {
 		    exit(-1);
@@ -105,17 +105,17 @@ Android 4.0之前在API层面就有很多方法重启你的应用进程，如自
 		}
 		sleep(SLEEP_INTERVEL);
     }
-```
+~~~~
 
 - 应用进程如何启动的呢？调用popen()方法
 
-```java
+~~~~{c++}
     FILE* fp;
     if ((fp = popen(command, "r")) == NULL) {
         exit(1);
     }
     pclose(fp);
-```
+~~~~
 
 ## 示例代码
 
@@ -139,43 +139,34 @@ Android 4.0之前在API层面就有很多方法重启你的应用进程，如自
 <p>那么如何去开启这个内核进程呢？肯定不能是Android程序，而是一个Linux程序，以下是具体步骤：</p>
 
 <ul>
-<li>使用C/C++编写一个程序，并在Linux下编译成二进制文件</li>
-</ul>
+<li><p>使用C/C++编写一个程序，并在Linux下编译成二进制文件</p>
 
 <blockquote>
   <p>使用其他语言理论上是可以的，但C/C++写的程序可以使用NDK编译</p>
-</blockquote>
-
-<ul>
+</blockquote></li>
 <li><p>将该文件放在Android工程的assets目录下打包</p></li>
 <li><p>在Android代码中编写一个Service，并在AndroidManifest.xml中将exported属性设为true</p></li>
 </ul>
 
-<pre><code class="xml">    &lt;service
-        android:name="com.yourApp.yourService"
-        android:exported="true"&gt;
-    &lt;/service&gt;
+<pre class=" language-java"><code class=" language-java">    <span class="token operator">&lt;</span>service
+        android<span class="token operator">:</span>name<span class="token operator">=</span><span class="token string">"com.yourApp.yourService"</span>
+        android<span class="token operator">:</span>exported<span class="token operator">=</span><span class="token string">"true"</span>&gt;
+    <span class="token operator">&lt;</span><span class="token operator">/</span>service&gt;
 </code></pre>
 
 <ul>
 <li>程序启动时，将该文件拷贝到data目录下的应用程序目录中，并修改权限为可执行文件</li>
 </ul>
 
-<pre><code class="java">    file.setExecutable(true);
-</code></pre>
+<pre class=" language-java"><code class=" language-java">    file<span class="token punctuation">.</span><span class="token function">setExecutable<span class="token punctuation">(</span></span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>- 在应用程序中，使用Java API执行该文件，并将相应的参数发送到Main函数中
 
-<ul>
-<li>在应用程序中，使用Java API执行该文件，并将相应的参数发送到Main函数中</li>
-</ul>
+<pre class=" language-java"><code class=" language-java">    Process process <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ProcessBuilder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">command<span class="token punctuation">(</span></span>arg1<span class="token punctuation">,</span> arg2<span class="token punctuation">,</span> <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">start<span class="token punctuation">(</span></span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>在Main函数中通过argv来访问
 
-<pre><code class="java">    Process process = new ProcessBuilder().command(arg1, arg2, ...).start();
-</code></pre>
+<pre class=" language-c"><code class="++ language-c">    <span class="token keyword">int</span> <span class="token function">main<span class="token punctuation">(</span></span><span class="token keyword">int</span> argc<span class="token punctuation">,</span> <span class="token keyword">char</span><span class="token operator">*</span><span class="token operator">*</span> argv<span class="token punctuation">)</span> <span class="token punctuation">{</span>
 
-<p>在Main函数中通过argv来访问</p>
-
-<pre><code class="java">    int main(int argc, char** argv) {
-
-    }
+    <span class="token punctuation">}</span>
 </code></pre>
 
 <h2 id="">守护进程的编写</h2>
@@ -186,47 +177,47 @@ Android 4.0之前在API层面就有很多方法重启你的应用进程，如自
 <li>首先调用fork()，启动一个子进程，并退出当前进程，调用setsid()使子进程完全独立，正式成为一个守护进程</li>
 </ul>
 
-<pre><code class="java">    if (fork() != 0) {
-        exit(0);
-    }
-    setsid();
-</code></pre>
+<pre class=" language-c"><code class="++ language-c">    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">fork<span class="token punctuation">(</span></span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token function">exit<span class="token punctuation">(</span></span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token function">setsid<span class="token punctuation">(</span></span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ </code></pre>
 
 <ul>
 <li>调用flock()获取文件锁，如果文件已加锁，说明守护进程存在，则退出当前进程，防止出现多个守护进程</li>
 </ul>
 
-<pre><code class="java">    int ret = 0;
-    ret = flock(fileno(g_lockfile), LOCK_EX | LOCK_NB);
-    if (ret != 0) {
-        return -1;
-    }
+<pre class=" language-java"><code class=" language-java">    <span class="token keyword">int</span> ret <span class="token operator">=</span><span class="token number"> 0</span><span class="token punctuation">;</span>
+    ret <span class="token operator">=</span> <span class="token function">flock<span class="token punctuation">(</span></span><span class="token function">fileno<span class="token punctuation">(</span></span>g_lockfile<span class="token punctuation">)</span><span class="token punctuation">,</span> LOCK_EX <span class="token operator">|</span> LOCK_NB<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>ret <span class="token operator">!</span><span class="token operator">=</span><span class="token number"> 0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> <span class="token number">-1</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
 </code></pre>
 
 <ul>
 <li>进入无限循环，判断应用程序进程是否存在，不存在则启动，然后休眠一段时间，如果程序被卸载则结束守护进程</li>
 </ul>
 
-<pre><code class="java">    while (1) {
-        if (isAppUninstalled(packagePath) == -1) {
-            exit(-1);
-        }
-        if (!isProcessExist(processName)) {
-            runProcess(packageName, serviceName);
-        }
-        sleep(SLEEP_INTERVEL);
-    }
+<pre class=" language-c"><code class="++ language-c">    <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isAppUninstalled<span class="token punctuation">(</span></span>packagePath<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token function">exit<span class="token punctuation">(</span></span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token function">isProcessExist<span class="token punctuation">(</span></span>processName<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token function">runProcess<span class="token punctuation">(</span></span>packageName<span class="token punctuation">,</span> serviceName<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token function">sleep<span class="token punctuation">(</span></span>SLEEP_INTERVEL<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
 </code></pre>
 
 <ul>
 <li>应用进程如何启动的呢？调用popen()方法</li>
 </ul>
 
-<pre><code class="java">    FILE* fp;
-    if ((fp = popen(command, "r")) == NULL) {
-        exit(1);
-    }
-    pclose(fp);
+<pre class=" language-c"><code class="++ language-c">    FILE<span class="token operator">*</span> fp<span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token punctuation">(</span>fp <span class="token operator">=</span> <span class="token function">popen<span class="token punctuation">(</span></span>command<span class="token punctuation">,</span> <span class="token string">"r"</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">==</span> NULL<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token function">exit<span class="token punctuation">(</span></span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token function">pclose<span class="token punctuation">(</span></span>fp<span class="token punctuation">)</span><span class="token punctuation">;</span>
 </code></pre>
 
 <h2 id="">示例代码</h2>
